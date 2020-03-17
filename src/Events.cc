@@ -97,10 +97,31 @@ void Events::CreateOutputTree()
   tree_out->Branch("FatJet_Hmatch",      FatJet_Hmatch,     "FatJet_Hmatch[nFatJet]/O");
   tree_out->Branch("FatJet_HgenIdx",      FatJet_HgenIdx,     "FatJet_HgenIdx[nFatJet]/I");
   tree_out->Branch("FatJet_HminDR",      FatJet_HminDR,     "FatJet_HminDR[nFatJet]/F");
+  //hh candidate info
+  tree_out->Branch("hh_pt",      &hh_pt,     "hh_pt/F");
+  tree_out->Branch("hh_eta",     &hh_eta,    "hh_eta/F");
+  tree_out->Branch("hh_phi",     &hh_phi,    "hh_phi/F");
+  tree_out->Branch("hh_mass",    &hh_mass,   "hh_mass/F");
+  //
+  tree_out->Branch("hh_gen_pt",      &hh_gen_pt,     "hh_gen_pt/F");
+  tree_out->Branch("hh_gen_eta",     &hh_gen_eta,    "hh_gen_eta/F");
+  tree_out->Branch("hh_gen_phi",     &hh_gen_phi,    "hh_gen_phi/F");
+  tree_out->Branch("hh_gen_mass",    &hh_gen_mass,   "hh_gen_mass/F");
+
 };
 
 void Events::ResetOutputTreeVariables()
 {
+  hh_pt   = -999.;
+  hh_eta  = -999.;
+  hh_phi  = -999.;
+  hh_mass = -999.;
+  //
+  hh_gen_pt   = -999.;
+  hh_gen_eta  = -999.;
+  hh_gen_phi  = -999.;
+  hh_gen_mass = -999.;
+  //
   for(int i = 0; i < 2; i++)
   {
     h_pt[i]  = -999.;
@@ -179,14 +200,13 @@ void Events::Loop()
         current_mIndex = GenPart_genPartIdxMother[i];
       }
     }
-    for( auto& tmp : h_vector )
-    {
-      //std::cout << "m: " << tmp.M() << " pt: " << tmp.Pt() << std::endl;
-    }
-    h_h1_pt->Fill(h_vector.at(0).Pt());
-    h_h2_pt->Fill(h_vector.at(1).Pt());
-    h_h1_h2_pt->Fill(h_vector.at(0).Pt(), h_vector.at(1).Pt());
 
+    if(h_vector.size() > 1)
+    {
+      h_h1_pt->Fill(h_vector.at(0).Pt());
+      h_h2_pt->Fill(h_vector.at(1).Pt());
+      h_h1_h2_pt->Fill(h_vector.at(0).Pt(), h_vector.at(1).Pt());
+    }
     //------------------------------
     //-------find fatJet------------
     //------------------------------
@@ -194,7 +214,7 @@ void Events::Loop()
     for(unsigned int i = 0; i < nFatJet; i++ )
     {
       TLorentzVector tmp_fatJet;
-      tmp_fatJet.SetPtEtaPhiM(FatJet_pt[i],FatJet_eta[i],FatJet_phi[i],FatJet_mass[i]);
+      tmp_fatJet.SetPtEtaPhiM(FatJet_pt[i],FatJet_eta[i],FatJet_phi[i],FatJet_msoftdrop[i]);
       float minDR = 999.;
       int match_idx = -1;
       for( int j = 0; j < h_vector.size(); j++)
@@ -220,15 +240,54 @@ void Events::Loop()
       // "; mass: " << FatJet_mass[i] << "; minDR:" << minDR << std::endl;
     }
 
+    //-----------------------------
+    //----------get hh cand -------
+    //-----------------------------
+    double sum_hh_pt = 0;
+    TLorentzVector hh_candidate(0,0,0,0);
+    for( int i  = 0; i < nFatJet; i++ )
+    {
+      for(int j = i+1; j < nFatJet; j++)
+      {
+        if ( FatJet_pt[i] + FatJet_pt[j] > sum_hh_pt)//pick hh candite with largest scalar PT sum
+        {
+          sum_hh_pt = FatJet_pt[i] + FatJet_pt[j];
+          //h1
+          TLorentzVector h1;
+          h1.SetPtEtaPhiM(FatJet_pt[i],FatJet_eta[i],FatJet_phi[i],FatJet_msoftdrop[i]);
+          //h2
+          TLorentzVector h2;
+          h2.SetPtEtaPhiM(FatJet_pt[j],FatJet_eta[j],FatJet_phi[j],FatJet_msoftdrop[j]);
+          hh_candidate = h1+h2;
+        }
 
-    //filling tree_out variables
-    this->h_pt[0] = h_vector.at(0).Pt();
-    this->h_eta[0] = h_vector.at(0).Eta();
-    this->h_phi[0] = h_vector.at(0).Phi();
-    //
-    this->h_pt[1] = h_vector.at(1).Pt();
-    this->h_eta[1] = h_vector.at(1).Eta();
-    this->h_phi[1] = h_vector.at(1).Phi();
+      }
+    }
+
+    if(h_vector.size() > 1)
+    {
+      //filling tree_out variables
+      this->h_pt[0] = h_vector.at(0).Pt();
+      this->h_eta[0] = h_vector.at(0).Eta();
+      this->h_phi[0] = h_vector.at(0).Phi();
+      //
+      this->h_pt[1] = h_vector.at(1).Pt();
+      this->h_eta[1] = h_vector.at(1).Eta();
+      this->h_phi[1] = h_vector.at(1).Phi();
+    }
+    //filling hh candidate variable
+    this->hh_pt   = hh_candidate.Pt();
+    this->hh_eta  = hh_candidate.Eta();
+    this->hh_phi  = hh_candidate.Phi();
+    this->hh_mass = hh_candidate.M();
+    //gen level
+    if(h_vector.size() > 1)
+    {
+      this->hh_gen_pt   = (h_vector.at(0)+h_vector.at(1)).Pt();
+      this->hh_gen_eta  = (h_vector.at(0)+h_vector.at(1)).Eta();
+      this->hh_gen_phi  = (h_vector.at(0)+h_vector.at(1)).Phi();
+      this->hh_gen_mass = (h_vector.at(0)+h_vector.at(1)).M();
+    }
 
     this->tree_out->Fill();
   }

@@ -3058,6 +3058,17 @@ public :
    bool  FatJet_Hmatch[100];
    int   FatJet_HgenIdx[100];
    float FatJet_HminDR[100];
+
+   float hh_pt;
+   float hh_eta;
+   float hh_phi;
+   float hh_mass;
+   //
+   float hh_gen_pt;
+   float hh_gen_eta;
+   float hh_gen_phi;
+   float hh_gen_mass;
+
    //float h2_eta;
    //float h2_phi;
 
