@@ -292,7 +292,7 @@ void Events::Loop()
     this->tree_out->Fill();
   }
 
-  TFile* fout = new TFile("diHiggs_Histrograms.root", "recreate");
+  TFile* fout = new TFile( fout_name.c_str(), "recreate");
   h_h1_pt->Write();
   h_h2_pt->Write();
   h_h1_h2_pt->Write();

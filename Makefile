@@ -10,7 +10,7 @@ CPPFLAGS += -g
 TARGET = diHiggs
 
 
-SRC = app/diHiggs.cc src/Events.cc
+SRC = app/diHiggs.cc src/Events.cc src/CommandLineInput.cc
 
 OBJ = $(SRC:.cc=.o)
 
