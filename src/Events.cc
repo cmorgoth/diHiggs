@@ -166,6 +166,13 @@ void Events::Loop()
   TH1F* h_h1_pt = new TH1F("h1_pt", "h1_pt", 100, 0, 1000 );
   TH1F* h_h2_pt = new TH1F("h2_pt", "h2_pt", 100, 0, 1000 );
   TH2F* h_h1_h2_pt = new TH2F("h1_h2_pt","h1_h2_pt", 100, 0, 1000, 100, 0, 1000);
+
+  //-------------------------------------
+  //Normalization histograms
+  //------------------------------------
+  TH1F* NEvents = new TH1F("NEvents", "NEvents", 1, 0, 1);
+  TH1F* NEvents_genweight = new TH1F("NEvents_genweight", "NEvents_genweight", 1, 0, 1);
+
   if (fChain == 0) return;
 
   Long64_t nentries = fChain->GetEntriesFast();
@@ -176,6 +183,9 @@ void Events::Loop()
     Long64_t ientry = LoadTree(jentry);
     if (ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
+
+    NEvents->Fill( 0.5, 1.0 );
+    NEvents_genweight->Fill(0.5, genWeight);
     // if (Cut(ientry) < 0) continue;
     //std::cout << ientry << std::endl;
     this->ResetOutputTreeVariables();
@@ -293,8 +303,10 @@ void Events::Loop()
   }
 
   TFile* fout = new TFile( fout_name.c_str(), "recreate");
-  h_h1_pt->Write();
-  h_h2_pt->Write();
-  h_h1_h2_pt->Write();
+  //h_h1_pt->Write();
+  //h_h2_pt->Write();
+  //h_h1_h2_pt->Write();
+  NEvents->Write();
+  NEvents_genweight->Write();
   tree_out->Write();
 }
